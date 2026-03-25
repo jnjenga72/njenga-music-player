@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Njenga Player</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+</head>
+<body>
+    <div id="root">
+        <!-- Player Page -->
+        <div id="player-page" class="player-container glass-panel">
+            <div class="top-nav">
+                <div class="logo">Njenga<span>Music</span> 🎵</div>
+                <button id="library-btn" class="nav-btn">Library 📚</button>
+            </div>
+
+            <!-- Phonograph -->
+            <div class="phonograph">
+                <div class="vinyl-case">
+                    <div class="vinyl-disk" id="disk">
+                        <div class="vinyl-grooves">
+                            <img class="album-art" src="https://via.placeholder.com/300" alt="Album Art">
+                            <div class="spindle"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tonearm -->
+                <div class="tonearm-container">
+                    <div class="tonearm" id="arm">
+                        <div class="pivot"></div>
+                        <div class="stick"></div>
+                        <div class="needle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Track Info -->
+            <div class="track-info">
+                <h2 id="track-title">No Track Selected</h2>
+                <h3 id="track-artist">Select a file to play</h3>
+                <button id="fav-toggle-btn" class="fav-btn" title="Add to Favorites">♡</button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <span id="current-time">0:00</span>
+                <input type="range" id="progress-bar" value="0" step="1">
+                <span id="duration">0:00</span>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button id="prev-btn" class="control-btn sm">⏮</button>
+                <button id="play-btn" class="control-btn" disabled>
+                    <span id="play-icon">▶</span>
+                </button>
+                <button id="next-btn" class="control-btn sm">⏭</button>
+            </div>
+
+            <!-- Volume Controls -->
+            <div class="volume-controls">
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+                <label for="volume-slider">Volume</label>
+            </div>
+        </div>
+
+        <!-- Library Page -->
+        <div id="library-page" class="library-container glass-panel hidden">
+            <div class="library-header">
+                <div class="logo">Njenga<span>Music</span> 🎵</div>
+                <button id="back-btn" class="nav-btn">← Back to Player</button>
+            </div>
+            
+            <div class="import-section">
+                <input type="text" id="search-bar" placeholder="🔍 Search songs..." class="glass-input">
+                <label for="audio-upload" class="import-label">+ Import Music Files</label>
+                <input type="file" id="audio-upload" accept="audio/*" multiple>
+            </div>
+
+            <h3>Favorites</h3>
+            <ul id="favorites-list" class="song-list"></ul>
+
+            <h3>All Songs</h3>
+            <ul id="playlist-list" class="song-list"></ul>
+
+            <!-- Mini Player (Visible in Library) -->
+            <div class="mini-player glass-panel hidden-mini">
+                <div class="mini-info">
+                    <span id="mini-title">Select a song</span>
+                </div>
+                <button id="mini-play-btn" class="control-btn sm">▶</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered', reg))
+                .catch(err => console.log('Service Worker registration failed', err));
+        }
+    </script>
+</body>
+</html>

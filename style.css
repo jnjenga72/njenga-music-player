@@ -1,0 +1,335 @@
+body {
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: white;
+    font-family: sans-serif;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Glassmorphism Utility */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+.glass-input::placeholder { color: rgba(255, 255, 255, 0.6); }
+
+.player-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    transition: opacity 0.3s ease;
+    position: absolute;
+    top: 0; left: 0;
+}
+
+/* Phonograph */
+.phonograph {
+    position: relative;
+    width: 300px;
+    height: 300px;
+}
+
+.vinyl-case {
+    width: 300px;
+    height: 300px;
+    background-color: #262626;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 4px solid #1f2937;
+}
+
+.vinyl-disk {
+    width: 95%;
+    height: 95%;
+    animation: spin 3s linear infinite;
+    animation-play-state: paused;
+}
+
+.vinyl-disk.spinning {
+    animation-play-state: running;
+}
+
+.vinyl-grooves {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(#111 50%, #000 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border: 2px solid #374151;
+    overflow: hidden;
+}
+
+.album-art {
+    width: 50%;
+    height: 50%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.spindle {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background-color: #d1d5db;
+    border-radius: 50%;
+    border: 1px solid #6b7280;
+}
+
+/* Tonearm */
+.tonearm-container {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 80px;
+    height: 250px;
+    pointer-events: none;
+}
+
+.tonearm {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform-origin: 50% 20px;
+    transform: rotate(-25deg);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tonearm.active {
+    transform: rotate(0deg);
+}
+
+.pivot { width: 40px; height: 40px; background-color: #d1d5db; border-radius: 50%; border: 4px solid #6b7280; z-index: 10; }
+.stick { width: 8px; height: 180px; background-color: #9ca3af; margin-top: -10px; border-left: 1px solid #4b5563; border-right: 1px solid #4b5563; }
+.needle { width: 25px; height: 40px; background-color: #ef4444; border-radius: 4px; border: 1px solid #7f1d1d; }
+
+/* Controls */
+.progress-container {
+    display: flex;
+    align-items: center;
+    width: 300px;
+    margin-bottom: 1rem;
+}
+
+.progress-container input[type="range"] {
+    flex: 1;
+    height: 5px;
+    border-radius: 5px;
+    background: #374151;
+    outline: none;
+    margin: 0 10px;
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+}
+
+/* Chrome, Safari, Opera */
+.progress-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #d1d5db;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#current-time, #duration {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Controls Container Alignment */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.controls .control-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none; border-radius: 50%; width: 80px; height: 80px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; transition: background-color 0.2s;
+}
+.controls .control-btn:hover { background-color: rgba(255, 255, 255, 0.2); }
+.controls .control-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.controls .control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.controls .control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.controls .control-btn.sm {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+}
+
+/* Volume Controls */
+.volume-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.volume-controls input[type="range"] {
+    width: 100px;
+}
+
+/* Library & Playlist */
+.library-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+    overflow-y: auto;
+    padding: 2rem;
+    padding-bottom: 100px; /* Space for mini player */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.song-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.playlist-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+.playlist-item:last-child { border-bottom: none; }
+.playlist-item:hover { background: rgba(255, 255, 255, 0.1); }
+.playlist-item.active { background: rgba(255, 255, 255, 0.2); color: #fff; font-weight: bold; }
+
+.track-info { text-align: center; position: relative; }
+#track-title { margin: 0; font-size: 1.5rem; margin-bottom: 5px; }
+#track-artist { margin: 0; color: #9ca3af; font-weight: normal; font-size: 1rem; }
+.import-label { margin: 20px 0; color: #60a5fa; cursor: pointer; text-decoration: underline; font-size: 1rem; display: inline-block; }
+#audio-upload { display: none; }
+
+/* Navigation & Header */
+.top-nav {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.2); }
+
+.logo {
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.logo span { color: #60a5fa; }
+
+.library-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 1rem;
+}
+
+/* Favorites */
+.fav-btn {
+    background: none; border: none; color: #ef4444; font-size: 1.5rem; cursor: pointer; margin-top: 5px;
+}
+.fav-btn.active { font-weight: bold; }
+
+/* Mini Player */
+.mini-player {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    border-radius: 15px;
+    transition: transform 0.3s ease;
+}
+
+.mini-player.hidden-mini {
+    transform: translate(-50%, 150%);
+}
+
+.mini-info { font-size: 0.9rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
+
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
