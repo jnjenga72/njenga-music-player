@@ -31,22 +31,72 @@ document.addEventListener('DOMContentLoaded', () => {
     let playlist = [];
     let favorites = new Set(); // Stores names of favorite files
     let currentTrackIndex = 0;
+    let currentObjectUrl = null;
+    let db;
+
+    // Initialize Database
+    const dbRequest = indexedDB.open('MusicPlayerDB', 1);
+    dbRequest.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains('tracks')) {
+            db.createObjectStore('tracks', { keyPath: 'name' });
+        }
+    };
+    dbRequest.onsuccess = (e) => {
+        db = e.target.result;
+        loadLibrary();
+    };
+    dbRequest.onerror = (e) => console.error("DB Error", e);
+
+    function loadLibrary(callback) {
+        if (!db) return;
+        const tx = db.transaction(['tracks'], 'readonly');
+        const store = tx.objectStore('tracks');
+        const req = store.getAll();
+        req.onsuccess = () => {
+            const result = req.result || [];
+            result.sort((a, b) => a.dateAdded - b.dateAdded);
+
+            playlist = result.map(item => item.file);
+            favorites.clear();
+            result.forEach(item => {
+                if (item.isFavorite) favorites.add(item.name);
+            });
+
+            renderPlaylist(searchInput.value);
+            if (callback) callback();
+        };
+    }
 
     // Handle File Import
     fileInput.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
-        if (files.length > 0) {
+        if (files.length > 0 && db) {
+            const tx = db.transaction(['tracks'], 'readwrite');
+            const store = tx.objectStore('tracks');
+            const wasEmpty = playlist.length === 0;
+
             files.forEach(file => {
-                playlist.push(file);
+                const isFav = favorites.has(file.name);
+                const track = {
+                    name: file.name,
+                    file: file,
+                    isFavorite: isFav,
+                    dateAdded: Date.now()
+                };
+                store.put(track);
             });
-            renderPlaylist();
-            
-            if (playlist.length === files.length) {
-                // If this is the first import (playlist was empty), load the first track
-                loadTrack(0);
-                playTrack();
-            }
+
+            tx.oncomplete = () => {
+                loadLibrary(() => {
+                    if (wasEmpty && playlist.length > 0) {
+                        loadTrack(0);
+                        playTrack();
+                    }
+                });
+            };
         }
+        e.target.value = ''; // Reset input to allow selecting the same file again
     });
 
     // Search Filter
@@ -59,16 +109,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadTrack(index) {
         if (index >= 0 && index < playlist.length) {
+            // Revoke previous URL to prevent memory leaks
+            if (currentObjectUrl) {
+                URL.revokeObjectURL(currentObjectUrl);
+            }
+
             currentTrackIndex = index;
             const file = playlist[index];
-            const fileUrl = URL.createObjectURL(file);
+            currentObjectUrl = URL.createObjectURL(file);
             
-            audio.src = fileUrl;
+            audio.src = currentObjectUrl;
             titleDisplay.textContent = file.name.replace(/\.[^/.]+$/, "");
             artistDisplay.textContent = "Local File";
             playBtn.disabled = false;
 
-            renderPlaylist();
+            renderPlaylist(searchInput.value);
             updateUI(); // To check favorite status
 
             // Update Mini Player Text
@@ -77,11 +132,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Extract Album Art using jsmediatags
             const albumArtImg = document.querySelector('.album-art');
+            if (albumArtImg) albumArtImg.src = "https://via.placeholder.com/300"; // Reset before loading
+            const loadingIndex = currentTrackIndex; // Capture index to prevent race condition
+
             if (window.jsmediatags && file) {
                 window.jsmediatags.read(file, {
                     onSuccess: function(tag) {
                         const picture = tag.tags.picture;
-                        if (picture) {
+                        if (picture && albumArtImg && loadingIndex === currentTrackIndex) {
                             const base64String = picture.data.reduce((acc, cur) => acc + String.fromCharCode(cur), "");
                             const base64 = "data:" + picture.format + ";base64," + window.btoa(base64String);
                             albumArtImg.src = base64;
@@ -154,14 +212,28 @@ document.addEventListener('DOMContentLoaded', () => {
     favBtn.addEventListener('click', () => {
         if (playlist.length === 0) return;
         const currentFile = playlist[currentTrackIndex];
+        const isFav = favorites.has(currentFile.name);
         
-        if (favorites.has(currentFile.name)) {
+        if (isFav) {
             favorites.delete(currentFile.name);
         } else {
             favorites.add(currentFile.name);
         }
+
+        // Update DB
+        if (db) {
+            const tx = db.transaction(['tracks'], 'readwrite');
+            const store = tx.objectStore('tracks');
+            store.get(currentFile.name).onsuccess = (e) => {
+                const data = e.target.result;
+                if (data) {
+                    data.isFavorite = !isFav;
+                    store.put(data);
+                }
+            };
+        }
         updateUI();
-        renderPlaylist(); // Update lists
+        renderPlaylist(searchInput.value); // Update lists
     });
 
     // Load metadata to get duration
@@ -173,19 +245,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Play/Pause Toggle
     playBtn.addEventListener('click', togglePlay);
 
+    // Sync state with Audio Element events
+    audio.addEventListener('play', () => {
+        isPlaying = true;
+        updateUI();
+    });
+    audio.addEventListener('pause', () => {
+        isPlaying = false;
+        updateUI();
+    });
+
     function togglePlay() {
-        if (isPlaying) {
-            pauseTrack();
-        } else {
+        if (playlist.length === 0) return;
+        if (audio.paused) {
             playTrack();
+        } else {
+            pauseTrack();
         }
     }
 
     function playTrack() {
-        audio.play().then(() => {
-            isPlaying = true;
-            updateUI();
-        }).catch(e => console.error("Playback failed", e));
+        audio.play().catch(e => console.error("Playback failed", e));
     }
 
     // Prev/Next
@@ -205,8 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function pauseTrack() {
         audio.pause();
-        isPlaying = false;
-        updateUI();
     }
 
     function updateUI() {
@@ -268,4 +346,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const seconds = Math.floor(time - minutes * 60);
         return `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
     }
+
+    // PWA Install Logic
+    let deferredPrompt;
+    const installBtn = document.createElement('button');
+    installBtn.textContent = "Download App";
+    Object.assign(installBtn.style, {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        zIndex: '9999',
+        padding: '12px 24px',
+        background: '#2563eb',
+        color: 'white',
+        border: 'none',
+        borderRadius: '50px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        display: 'none'
+    });
+    document.body.appendChild(installBtn);
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        installBtn.style.display = 'none';
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+        installBtn.style.display = 'none';
+    });
 });

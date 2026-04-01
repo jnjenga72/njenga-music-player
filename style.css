@@ -56,13 +56,13 @@ body {
 /* Phonograph */
 .phonograph {
     position: relative;
-    width: 300px;
-    height: 300px;
+    width: 250px;
+    height: 250px;
 }
 
 .vinyl-case {
-    width: 300px;
-    height: 300px;
+    width: 250px;
+    height: 250px;
     background-color: #262626;
     border-radius: 50%;
     display: flex;
@@ -118,7 +118,7 @@ body {
     top: -20px;
     right: -20px;
     width: 80px;
-    height: 250px;
+    height: 210px;
     pointer-events: none;
 }
 
@@ -138,7 +138,7 @@ body {
 }
 
 .pivot { width: 40px; height: 40px; background-color: #d1d5db; border-radius: 50%; border: 4px solid #6b7280; z-index: 10; }
-.stick { width: 8px; height: 180px; background-color: #9ca3af; margin-top: -10px; border-left: 1px solid #4b5563; border-right: 1px solid #4b5563; }
+.stick { width: 8px; height: 150px; background-color: #9ca3af; margin-top: -10px; border-left: 1px solid #4b5563; border-right: 1px solid #4b5563; }
 .needle { width: 25px; height: 40px; background-color: #ef4444; border-radius: 4px; border: 1px solid #7f1d1d; }
 
 /* Controls */
